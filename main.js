@@ -38,9 +38,19 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 
 // Main directional light (simulates sun)
-const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-mainLight.position.set(5, 10, 7);
+const mainLight = new THREE.DirectionalLight(0xffffff, 0.7);
+mainLight.position.set(10, 15, 10);
 mainLight.castShadow = true;
+// Improve shadow quality
+mainLight.shadow.mapSize.width = 2048;
+mainLight.shadow.mapSize.height = 2048;
+mainLight.shadow.camera.near = 0.5;
+mainLight.shadow.camera.far = 50;
+mainLight.shadow.camera.left = -15;
+mainLight.shadow.camera.right = 15;
+mainLight.shadow.camera.top = 15;
+mainLight.shadow.camera.bottom = -15;
+mainLight.shadow.bias = -0.0001;
 scene.add(mainLight);
 
 // Fill light from the opposite side
@@ -53,9 +63,12 @@ const topLight = new THREE.DirectionalLight(0xffffff, 0.3);
 topLight.position.set(0, 10, 0);
 scene.add(topLight);
 
-// Enable shadow mapping
+// Enable shadow mapping with better quality settings
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMapSoft = true;
+renderer.shadowMap.bias = -0.001;
+renderer.shadowMap.darkness = 1;
 
 // GUI setup
 const gui = new GUI();
@@ -99,10 +112,13 @@ loader.load(
         const materials = new Set();
         object.traverse(function (child) {
             if (child.isMesh) {
-                // Ensure the material has color property
-                if (!child.material.color) {
-                    child.material.color = new THREE.Color(0x808080);
-                }
+                // Set up PBR materials for better realism
+                child.material = new THREE.MeshStandardMaterial({
+                    color: child.material.color || 0xcccccc,
+                    metalness: 0.2,
+                    roughness: 0.8,
+                    envMapIntensity: 1.0
+                });
                 // Enable shadows for each mesh
                 child.castShadow = true;
                 child.receiveShadow = true;
